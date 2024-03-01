@@ -1,0 +1,59 @@
+apiVersion: core.choreo.dev/v1alpha1
+kind: Component
+metadata:
+  name: component1
+  displayName: Component 1
+  # +optional Description of the component.
+  description: Component 1
+  # +required Project name of the component that this component belongs to. Cannot be changed after creation.
+  projectName: project1
+spec:
+  # +required Type of the component. Cannot be changed after creation.
+  # Accepted values: ["Service", "ManualTask", "ScheduledTask", "WebApplication", "Webhook", "APIProxy", "TestRunner", "EventHandler"]
+  # change this to split into the component type and build preset
+  type: byocService
+  # +required Source code repository details that are linked to a deployment track.
+  source:
+    # +optional Bitbucket specific repository details.
+    bitbucket:
+      # +required Bitbucket repository URL.
+      repository: https://bitbucket.example.com/Mirage20/byoc-service
+      # +optional Bitbucket repository path. Defaults to root directory.
+      path: go/greeter
+    # +optional Github specific repository details.
+    github:
+      # +required Github repository URL.
+      repository: https://github.com/Mirage20/byoc-service
+      # +optional Github repository path. Defaults to root directory.
+      path: go/greeter
+  build:
+    # +optional Buildpack specific build instructions for components.
+    buildpack:
+      # +required Language. Accepted values : [ “ballerina”, “java”, “python”,    “go”, “php”, “ruby”, “nodejs”]
+      language: java
+      # +optional language version.
+      version: 1.x
+      # +optional port to expose the component on.
+      port: 8080
+      # +optional Below are required for webapp components.
+      # +optional Build command for the webapp. Defaults to "npm run build".
+      buildCommand: npm run build
+      # +optional NodeJS version to use for the build. Defaults to latest LTS version.
+      nodeVersion: 16.3.0
+      # +required Build output directory.
+      outputDir: build/
+      # +optional Dockerfile path relative to the repository root. Defaults to "Dockerfile".
+      dockerfilePath: multi-protocol-service/Dockerfile
+      # +optional Docker context path relative to the repository root. Defaults to the repository root.
+      dockerContextPath: multi-protocol-service
+
+status:
+  # Current status of the component.
+  # Accepted values: ["Pending", "Building", "Creating", "Failed"]
+  phase: Pending
+  # Component Id of the component.
+  componentId: 12345678-1234-1234-1234-123456789012
+  # Component creation time
+  createdAt: "2021-06-01T12:00:00Z"
+  # Component last updated time
+  updatedAt: "2021-06-01T12:00:00Z"
