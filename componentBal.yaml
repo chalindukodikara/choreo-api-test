@@ -1,0 +1,12 @@
+{
+  "apiVersion": "core.choreo.dev/v1alpha1",
+  "kind": "Component",
+  "metadata": { "name": "next11", "projectName": "udqn" },
+  "spec":
+    {
+      "type": "byocWebApp",
+      "source":
+        { "github": { "repository": "https://github.com/kaje94/react-todo-app", "branch": "main", "path": "nextjs" } },
+      "build": { "docker": { "dockerFilePath": "nextjs/Dockerfile", "dockerContextPath": "nextjs", "port": 3000 } },
+    },
+}

@@ -1,7 +1,7 @@
 // import ballerina/http;
 import ballerina/io;
-// import ballerina/mime;
-import ballerina/yaml;
+
+// import ballerina/yaml;
 
 // service / on new http:Listener(9090) {
 
@@ -9,16 +9,27 @@ import ballerina/yaml;
 //     resource function post jsonFromYaml(@http:Payload string yamlContent) returns json|error {
 //         json jsonData = check yaml:readString(yamlContent);
 //         io:println(jsonData);
-//         return jsonData;
+//         return jsonData;``
 //     }
 // }
+
+type Example record {
+    int id;
+    string? name;
+    string address?;
+};
 
 public function main() returns error? {
     // Read the JSON file
     // json jsonValue = check io:fileReadJson("resources/sample.json");
-    string yamlString = check io:fileReadString("component.yaml");
-    json jsonData = check yaml:readString(yamlString);
-    io:println(jsonData);
+    // string yamlString = check io:fileReadString("component.yaml");
+    // json jsonData = check yaml:readString(yamlString);
+    // // io:println(jsonData);
+    // Example example = {
+    //     id: 1,
+    //     name: null
+    // };
+    // io:println(example, example.address is (), example.address is string);
     // Convert the JSON value to the YAML value
     // string yamlValue = check convertToYaml(jsonValue);
 
@@ -26,6 +37,15 @@ public function main() returns error? {
     // string encodedString = check (check mime:base64Encode(yamlValue)).ensureType();
 
     // io:println(yamlValue);
+
+    //## PostgreSQL Operations ##/////////////////////////////////////////////////////
+    int|error insertedId = insertKind();
+    io:println(insertedId);
+    error? searchedKindResult = searchKind();
+    io:println(searchedKindResult);
+    //## Mongo DB Operations ##/////////////////////////////////////////////////////
+    // error? mongoInsert = insertData();
+    // error? mongoRetrieve = retrieveData();
 }
 
 // function convertToYaml(json input) returns string|error {
