@@ -16,26 +16,12 @@ spec:
         resources:
           requests:
             storage: 2Gi
-  volumes:
-    # - name: workspace
-    #   emptyDir: {}
-    - name: local-documents
-      hostPath:
-        path: /Users/Chalindu/Documents
-        type: Directory
-    - name: registries-conf
-      configMap:
-        name: registries-config
-    - name: local-source
-      hostPath:
-        path: /Users/Chalindu/Documents/WSO2/Repositories/choreo-samples/docker-time-logger-schedule # Replace with your local directory path
-        type: Directory
 
   templates:
     - name: build-workflow
       steps:
-        # - - name: clone-repo
-        #     template: clone-repository
+        - - name: clone-repo
+            template: clone-repository
         - - name: build-image
             template: build-step
         # - - name: save-image
@@ -43,20 +29,20 @@ spec:
         # - - name: copy-to-local
         #     template: copy-image-to-local
 
-    # - name: clone-repository
-    #   container:
-    #     image: alpine/git
-    #     command: ["sh", "-c"]
-    #     args:
-    #       - |
-    #         echo "Cloning repository from the main branch..."
-    #         git clone --single-branch --branch main https://github.com/wso2/choreo-samples.git /mnt/vol/choreo-samples
-    #         echo "Repository cloned successfully."
-    #         ls /mnt/vol/choreo-samples/docker-time-logger-schedule
-    #         echo "Can go into docker-time-logger-schedule"
-    #     volumeMounts:
-    #       - name: workspace
-    #         mountPath: /mnt/vol
+    - name: clone-repository
+      container:
+        image: alpine/git
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo "Cloning repository from the master branch..."
+            git clone --single-branch --branch master https://github.com/chalindukodikara/choreo-api-test.git /mnt/vol
+            echo "Repository cloned successfully."
+            ls /mnt/vol/scheduled-task-time-logger
+            echo "Can go into scheduled-task-time-logger"
+        volumeMounts:
+          - name: workspace
+            mountPath: /mnt/vol
 
     - name: build-step
       container:
@@ -74,7 +60,7 @@ spec:
             echo -e "[storage]\ndriver = \"overlay\"\nrunroot = \"/var/run/containers/storage\"\ngraphroot = \"/var/lib/containers/storage\"\n[storage.options.overlay]\nmount_program = \"/usr/bin/fuse-overlayfs\"" > /etc/containers/storage.conf
 
             echo "Building Docker image..."
-            podman build -t docker-time-logger:latest /mnt/vol/choreo-samples/docker-time-logger-schedule
+            podman build -t docker-time-logger:latest /mnt/vol/scheduled-task-time-logger
 
             echo "Tagging Docker image for the registry..."
             podman tag docker-time-logger:latest registry.choreo-dp:5000/docker-time-logger:latest
@@ -84,10 +70,8 @@ spec:
 
             echo "Docker image pushed successfully."
         volumeMounts:
-          - name: local-documents
+          - name: workspace
             mountPath: /mnt/vol
-          # - name: workspace
-          #   mountPath: /mnt/vol
           # - name: docker-socket
           #   mountPath: /var/run/docker.sock
 
