@@ -1,0 +1,120 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: build-docker-image-
+  namespace: argo-build
+spec:
+  serviceAccountName: argo-workflow
+  entrypoint: build-workflow
+  volumeClaimTemplates:
+    - metadata:
+        creationTimestamp: null
+        name: workspace
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi
+  volumes:
+    # - name: workspace
+    #   emptyDir: {}
+    - name: local-documents
+      hostPath:
+        path: /Users/Chalindu/Documents
+        type: Directory
+    - name: registries-conf
+      configMap:
+        name: registries-config
+    - name: local-source
+      hostPath:
+        path: /Users/Chalindu/Documents/WSO2/Repositories/choreo-samples/docker-time-logger-schedule # Replace with your local directory path
+        type: Directory
+
+  templates:
+    - name: build-workflow
+      steps:
+        # - - name: clone-repo
+        #     template: clone-repository
+        - - name: build-image
+            template: build-step
+        # - - name: save-image
+        #     template: save-docker-image
+        # - - name: copy-to-local
+        #     template: copy-image-to-local
+
+    # - name: clone-repository
+    #   container:
+    #     image: alpine/git
+    #     command: ["sh", "-c"]
+    #     args:
+    #       - |
+    #         echo "Cloning repository from the main branch..."
+    #         git clone --single-branch --branch main https://github.com/wso2/choreo-samples.git /mnt/vol/choreo-samples
+    #         echo "Repository cloned successfully."
+    #         ls /mnt/vol/choreo-samples/docker-time-logger-schedule
+    #         echo "Can go into docker-time-logger-schedule"
+    #     volumeMounts:
+    #       - name: workspace
+    #         mountPath: /mnt/vol
+
+    - name: build-step
+      container:
+        image: alpine:3.20
+        securityContext:
+          privileged: true
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo "Installing dependencies and Podman..."
+            apk --no-cache add podman buildah shadow fuse-overlayfs
+
+            echo "Configuring Podman storage..."
+            mkdir -p /etc/containers
+            echo -e "[storage]\ndriver = \"overlay\"\nrunroot = \"/var/run/containers/storage\"\ngraphroot = \"/var/lib/containers/storage\"\n[storage.options.overlay]\nmount_program = \"/usr/bin/fuse-overlayfs\"" > /etc/containers/storage.conf
+
+            echo "Building Docker image..."
+            podman build -t docker-time-logger:latest /mnt/vol/choreo-samples/docker-time-logger-schedule
+
+            echo "Tagging Docker image for the registry..."
+            podman tag docker-time-logger:latest registry.choreo-dp:5000/docker-time-logger:latest
+
+            echo "Pushing Docker image to the registry..."
+            podman push --tls-verify=false registry.choreo-dp:5000/docker-time-logger:latest
+
+            echo "Docker image pushed successfully."
+        volumeMounts:
+          - name: local-documents
+            mountPath: /mnt/vol
+          # - name: workspace
+          #   mountPath: /mnt/vol
+          # - name: docker-socket
+          #   mountPath: /var/run/docker.sock
+
+    # - name: save-docker-image
+    #   container:
+    #     image: docker
+    #     command: ["sh", "-c"]
+    #     args:
+    #       - |
+    #         echo "Saving Docker image to tar file..."
+    #         docker save -o /workspace/docker-time-logger.tar docker-time-logger:latest
+    #         echo "Docker image saved to /workspace/docker-time-logger.tar."
+    #     volumeMounts:
+    #       - name: workspace
+    #         mountPath: /workspace
+
+    # - name: copy-image-to-local
+    #   container:
+    #     image: alpine
+    #     command: ["sh", "-c"]
+    #     args:
+    #       - |
+    #         echo "Copying image tar file to local Documents directory..."
+    #         cp /workspace/docker-time-logger.tar /Documents/docker-time-logger.tar
+    #         echo "Image successfully copied."
+    #     volumeMounts:
+    #       - name: workspace
+    #         mountPath: /workspace
+    #       - name: local-documents
+    #         mountPath: /Documents
