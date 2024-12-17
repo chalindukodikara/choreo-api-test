@@ -11,3 +11,12 @@ observabilityIncluded = true
 groupId = "org.postgresql"
 artifactId = "postgresql"
 version = "42.2.20"
+
+[persist]
+datastore = "postgresql"
+module = "choreo_api_test.db"
+
+[[platform.java17.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist.sql-native"
+version = "1.2.1"
